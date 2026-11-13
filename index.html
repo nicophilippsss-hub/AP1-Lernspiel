@@ -4,10 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>AP1 Büromanagement Lernseite</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0b0b0d">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="AP1-Lernspiel">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+.dl{margin-top:16px;display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;justify-content:space-between}
+.dl[hidden]{display:none}
+.dl h3{margin:0 0 4px;font-size:18px}
+.dl p{margin:0;max-width:56ch}
+.dl .row{gap:10px}
 /* Layout: eine dunkle Apple-Welt. Sticky-Navigation, sieben Ansichten über #hash, Karten im Raster, Verlaufsbalken unten. */
 :root{
   --bg:#0b0b0d;
@@ -353,6 +366,17 @@ nav.tabs{min-width:0}
         <div class="row small muted" style="margin:6px 0 10px" id="mini-meta"></div>
         <div class="progress"><i id="mini-bar" style="width:0"></i></div>
         <div class="row" style="margin-top:14px"><a class="btn sm" href="#arena">Zur Arena</a><a class="btn ghost sm" href="#held">Charakter ansehen</a></div>
+      </div>
+    </div>
+
+    <div class="card dl" id="dlcard" hidden>
+      <div>
+        <h3>Spiel herunterladen</h3>
+        <p class="small muted" id="dl-note">Installiere das Spiel als App auf PC oder Handy, dann läuft es auch ohne Internet. Oder lade die Windows-Version als ZIP herunter.</p>
+      </div>
+      <div class="row">
+        <button class="btn sm" id="dl-install" type="button" hidden>Als App installieren</button>
+        <a class="btn ghost sm" id="dl-zip" href="https://github.com/nicophilippsss-hub/AP1-Lernspiel/releases/latest/download/AP1-Lernspiel-Windows.zip">Windows-Version (ZIP)</a>
       </div>
     </div>
 
@@ -2280,6 +2304,36 @@ function renderChecks(){
 document.addEventListener("keydown",function(e){if(e.key==="Escape")$("#lvlup").classList.add("hide");});
 ensureDaily();renderSnd();renderPlan();renderGenNav();newTask();renderQuizSetup();drawTimer();renderChecks();renderHud();route();
 })();
+</script>
+<script>
+(function () {
+  var card = document.getElementById("dlcard");
+  var btn = document.getElementById("dl-install");
+  var note = document.getElementById("dl-note");
+  var standalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+  var local = location.protocol === "file:";
+  if (!card || standalone || local) return;   // installiert oder ZIP-Version: kein Download-Kasten
+  card.hidden = false;
+  var deferred = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault(); deferred = e; btn.hidden = false;
+  });
+  btn.addEventListener("click", function () {
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function () { deferred = null; btn.hidden = true; });
+  });
+  window.addEventListener("appinstalled", function () {
+    btn.hidden = true;
+    note.textContent = "Installiert. Du findest das Spiel jetzt im Startmenü bzw. auf dem Startbildschirm.";
+  });
+  if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+    note.textContent = "Auf dem iPhone: Teilen-Symbol antippen und „Zum Home-Bildschirm“ wählen. Dann läuft das Spiel wie eine App.";
+  }
+})();
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", function () { navigator.serviceWorker.register("sw.js").catch(function () {}); });
+}
 </script>
 </body>
 </html>
